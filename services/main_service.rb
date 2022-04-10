@@ -11,12 +11,12 @@ class MainService
     @external_source_file = Spreadsheet.open external_source_file_path
     @external_source_file_worksheet = @external_source_file.worksheet 0
 
-    @inclusion_file = Spreadsheet::Worksheet.new
+    @inclusion_file = Spreadsheet::Workbook.new
     @inclusion_file_worksheet = @inclusion_file.create_worksheet
     @inclusion_file_worksheet.row(0).concat inclusion_file_headers
     @inclusion_file_index = 1
 
-    @exclusion_file = Spreadsheet::Worksheet.new
+    @exclusion_file = Spreadsheet::Workbook.new
     @exclusion_file_worksheet = @exclusion_file.create_worksheet
     @exclusion_file_worksheet.row(0).concat exclusion_file_headers
     @exclusion_file_index = 1
@@ -28,20 +28,21 @@ class MainService
     process_worksheet(@internal_source_file_worksheet, @external_source_file_worksheet, type: 'exclusion')
 
     @inclusion_file.write file_name
+
     @exclusion_file.write file_name(type: 'exclusion')
   end
 
   def process_worksheet(worksheet1, worksheet2, type: 'inclusion')
-    worksheet1.each do |row, index|
-      next if index == 0 && type == 'inclusion'
+    worksheet1.each_with_index do |row, index|
+      next if index == 0
       id = row[1]
 
       found = search_in_worksheet(worksheet2, id)
 
       if type == 'inclusion'
-        write_on_inclusion_file(external_row) unless found
+        write_on_inclusion_file(row) unless found
       else
-        write_on_exclusion_file(internal_row) unless found
+        write_on_exclusion_file(row) unless found
       end
     end
   end
@@ -50,7 +51,7 @@ class MainService
     found = false
 
     worksheet.each do |row|
-      if row.includes? id_to_search
+      if row[1] == id_to_search
         found = true
         break
       end
@@ -60,7 +61,7 @@ class MainService
   end
 
   def write_on_exclusion_file(row)
-    # we just need government_id_type and government_id
+    #we just need government_id_type and government_id
     @exclusion_file_worksheet.row(@exclusion_file_index).concat([row[0], row[1]])
     @exclusion_file_index += 1
   end
