@@ -1,4 +1,5 @@
 require 'spreadsheet'
+require 'date'
 
 class MainService
   def initialize(internal_source_file_path, external_source_file_path)
@@ -53,5 +54,36 @@ class MainService
   def write_on_inclusion_file(row)
     @inclusion_file_worksheet.row(@inclusion_file_index).concat(row)
     @inclusion_file_index += 1
+  end
+
+  def inclusion_file_headers
+    [
+      'government_id_type',
+      'government_id',
+      'country_of_birth',
+      'birthday',
+      'gender',
+      'first_name',
+      'second_first_name',
+      'last_name',
+      'second_last_name',
+      'email',
+      'phone',
+      'province',
+      'canton',
+      'district',
+      'company'
+    ]
+  end
+
+  def exclusion_file_headers
+    [
+      'government_id_type',
+      'government_id',
+    ]
+  end
+
+  def file_name(type: 'inclusion')
+    "affiliates_#{type == 'inclusion'? 'inclusion' : 'exclusion'}_#{Date.today}.xls"
   end
 end
