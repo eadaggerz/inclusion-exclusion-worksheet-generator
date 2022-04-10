@@ -13,22 +13,36 @@ class MainService
 
     @inclusion_file = Spreadsheet::Worksheet.new
     @inclusion_file_worksheet = @inclusion_file.create_worksheet
+    @inclusion_file_worksheet.row(0).concat inclusion_file_headers
     @inclusion_file_index = 1
 
     @exclusion_file = Spreadsheet::Worksheet.new
     @exclusion_file_worksheet = @exclusion_file.create_worksheet
+    @exclusion_file_worksheet.row(0).concat exclusion_file_headers
     @exclusion_file_index = 1
   end
 
   def run
-    @external_source_file_worksheet.each do |external_row, index|
-      next if index == 0
-      id = external_row[1]
+    process_worksheet(@external_source_file_worksheet, @internal_source_file_worksheet)
 
-      # search in internal file
-      found = search_in_worksheet(@internal_source_file_worksheet, id)
+    process_worksheet(@internal_source_file_worksheet, @external_source_file_worksheet, type: 'exclusion')
 
-      write_on_inclusion_file(external_row) unless found
+    @inclusion_file.write file_name
+    @exclusion_file.write file_name(type: 'exclusion')
+  end
+
+  def process_worksheet(worksheet1, worksheet2, type: 'inclusion')
+    worksheet1.each do |row, index|
+      next if index == 0 && type == 'inclusion'
+      id = row[1]
+
+      found = search_in_worksheet(worksheet2, id)
+
+      if type == 'inclusion'
+        write_on_inclusion_file(external_row) unless found
+      else
+        write_on_exclusion_file(internal_row) unless found
+      end
     end
   end
 
